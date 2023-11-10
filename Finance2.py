@@ -5,6 +5,7 @@ from tkinter import messagebox
 import matplotlib.pyplot as plt
 
 class MoneyManager:
+
     def __init__(self, filename='transactions.json'):
         self.filename = filename
         self.transactions = self.load_transactions()
@@ -52,17 +53,17 @@ class MoneyManager:
             self.transactions=[]
             json.dump({}, file)
             
+                
+
 class MoneyManagerApp:
-    
-    def __init__(self, root):
-       
+
+    def __init__(self, root):       
         self.manager = MoneyManager()
         self.root = root
         self.create_login_page()
         self.create_widgets()
 
-    def create_login_page(self):
-        
+    def create_login_page(self):        
         self.root.title("Personal Money Management App")
         screen_width=root.winfo_screenwidth()-50
         screen_height=root.winfo_screenheight()-100
@@ -77,8 +78,7 @@ class MoneyManagerApp:
         heading=Label(frame_titlebar,text='Bill Blitzer',font=('Algerian',25),foreground='white',background='navy blue')
         heading.pack(expand=False,fill=BOTH)
 
-    def create_widgets(self):
-        
+    def create_widgets(self):        
         self.label_description = Label(self.root, text="Description:")
         self.label_description.pack()
 
