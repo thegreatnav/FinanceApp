@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 
-
 class MoneyManager:
     def __init__(self, filename='transactions2.json'):
         self.filename = filename
@@ -70,6 +69,21 @@ class MoneyManager:
 manager = MoneyManager()
 
 
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        new_username = request.form['username']
+        new_password = request.form['password']
+
+        if new_username and new_password:
+            manager.register_user(new_username, new_password)
+            flash('Registration successful! You can now log in.', 'success')
+            return redirect(url_for('login'))
+        else:
+            flash('Please enter both username and password.', 'error')
+
+    return render_template('register.html')
+
 @app.route('/', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -77,16 +91,7 @@ def login():
         entered_password = request.form['password']
 
         if 'register' in request.form:
-            # Register new user
-            new_username = request.form['username']
-            new_password = request.form['password']
-
-            if new_username and new_password:
-                manager.register_user(new_username, new_password)
-                flash('Registration successful! You can now log in.', 'success')
-                return redirect(url_for('login'))
-            else:
-                flash('Please enter both username and password.', 'error')
+            return render_template('register.html')
         else:
             # Login user
             if manager.validate_login(entered_username, entered_password):
@@ -97,7 +102,6 @@ def login():
                 flash('Invalid username or password', 'error')
 
     return render_template('login.html')
-
 
 @app.route('/logout')
 def logout():
