@@ -57,8 +57,13 @@
     <div class="container">
         <h1>View Transactions</h1>
         <ul>
-            {% for transaction in transactions %}
-                <li>{{ transaction['description'] }}: ({{ transaction['type'] }}) ₹{{ '{:.2f}'.format(transaction['amount']) }} - Category: {{ transaction['category'] }}</li>
+            {% for category, transactions in transactions_by_category.items() %}
+                <li><strong>{{ category }}</strong></li>
+                <ul>
+                    {% for transaction in transactions %}
+                        <li>{{ transaction['description'] }}: ({{ transaction['type'] }}) ₹{{ '{:.2f}'.format(transaction['amount']) }}</li>
+                    {% endfor %}
+                </ul>
             {% endfor %}
         </ul>
         <a href="{{ url_for('dashboard') }}">Back to Dashboard</a>
