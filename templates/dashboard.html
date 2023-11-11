@@ -65,18 +65,22 @@
 
 <body>
     <div class="container">
-        <h1>Dashboard</h1>
-        <ul>
-            <li>Transaction 1: $100.00</li>
-            <li>Transaction 2: $50.00</li>
-            <li>Transaction 3: $75.00</li>
-        </ul>
-        <a href="{{ url_for('add_transaction') }}">Add Transaction</a>
+        <h1>Hello...</h1>       
+        {% if balance is defined %}
+            <p>Your current expenditure is : ₹{{ '{:.2f}'.format(balance) }}</p>
+        {% else %}
+            <p>No balance available.</p>
+        {% endif %}
+
+        <a href="{{ url_for('add_transaction') }}">Add Transaction</a> 
         <a href="{{ url_for('view_balance') }}">View Balance</a>
         <a href="{{ url_for('view_transactions') }}">View Transactions</a>
+        
         <button onclick="goBack()">Go Back</button>
-
         <script>
+            function add_transaction_category(cat){
+                
+            }
             function goBack() {
                 window.history.back();
             }

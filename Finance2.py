@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 class MoneyManager:
 
-    def __init__(self, filename='transactions.json'):
+    def __init__(self, filename='transactions2.json'):
         self.filename = filename
         self.transactions = self.load_transactions()
 

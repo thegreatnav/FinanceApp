@@ -1,1 +1,1 @@
-[{"description": "Car", "amount": 600.0, "type": "credit"}, {"description": "Salary", "amount": 1200.0, "type": "debit"}]
+{"nav": [{"description": "Car", "amount": 5000.0, "type": "debit"}, {"description": "Trip", "amount": 566.0, "type": "debit"}, {"description": "Car", "amount": 5000.0, "type": "debit"}]}

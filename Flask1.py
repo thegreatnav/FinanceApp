@@ -16,41 +16,51 @@ class MoneyManager:
             with open(self.filename, 'r') as file:
                 return json.load(file)
         else:
-            return []
+            return {}
 
     def save_transactions(self):
         with open(self.filename, 'w') as file:
             json.dump(self.transactions, file)
 
-    def add_transaction(self, description, amount, crdb):
+    def add_transaction(self, username, description, amount, crdb):
+        if username not in self.transactions:
+            self.transactions[username] = []  # Keep it as an empty list
         transaction = {'description': description, 'amount': amount, 'type': crdb}
-        self.transactions.append(transaction)
+        self.transactions[username].append(transaction)
         self.save_transactions()
 
-    def view_balance(self):
-        balance = sum(transaction['amount'] for transaction in self.transactions)
-        return balance
 
-    def view_transactions(self):
-        return self.transactions
+    def view_balance(self,username):
+        total_amt_spent=0
+        if username in self.transactions:
+            for transaction in self.transactions[username]:
+                if 'type' in transaction and transaction['type']=='debit':
+                    total_amt_spent=total_amt_spent+transaction['amount']
+        return total_amt_spent
 
-    def view_totalamountspent(self):
+    def view_transactions(self, username):
+        if username in self.transactions:
+            return self.transactions[username]
+        else:
+            return []
+
+    def view_totalamountspent(self,username):
         sum = 0
-        for transaction in self.transactions:
+        for transaction in self.transactions[username]:
             if transaction['type'] == 'debit':
                 sum = sum + transaction['amount']
         return sum
 
-    def view_totalamountgained(self):
+    def view_totalamountgained(self,username):
         sum = 0
-        for transaction in self.transactions:
+        for transaction in self.transactions[username]:
             if transaction['type'] == 'credit':
                 sum = sum + transaction['amount']
         return sum
 
     def reset_database(self):
         with open(self.filename, 'w') as file:
-            self.transactions = []
+            self.transactions = {}
             json.dump({}, file)
 
     def register_user(self, username, password):
@@ -64,10 +74,7 @@ class MoneyManager:
 
         return entered_username == user_data.get("username") and entered_password == user_data.get("password")
 
-
-# Initialize the MoneyManager outside of the route functions
 manager = MoneyManager()
-
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -122,20 +129,9 @@ def dashboard():
     if 'username' not in session:
         flash('Please log in first', 'error')
         return redirect(url_for('login'))
-
-    transactions = manager.view_transactions()
-    if transactions:
-        descriptions = [transaction['description'] for transaction in transactions]
-        amounts = [transaction['amount'] for transaction in transactions]
-
-        fig, ax = plt.subplots()
-        ax.bar(descriptions, amounts)
-        ax.set_xlabel('Transaction Descriptions')
-        ax.set_ylabel('Amounts')
-        ax.set_title('Transaction Data Visualization')
-        plt.show()
-
-    return render_template('dashboard.html')
+    
+    balance=manager.view_balance(session['username'])
+    return render_template('dashboard.html',balance=balance)
 
 
 @app.route('/add_transaction', methods=['GET', 'POST'])
@@ -145,12 +141,13 @@ def add_transaction():
         return redirect(url_for('login'))
 
     if request.method == 'POST':
+        username=session['username']
         description = request.form['description']
         amount = float(request.form['amount'])
         crdb = request.form['crdb']
 
         if description and amount:
-            manager.add_transaction(description, amount, crdb)
+            manager.add_transaction(username,description, amount, crdb)
             flash('Transaction added successfully!', 'success')
         else:
             flash('Please enter both description and amount.', 'error')
@@ -164,8 +161,8 @@ def view_balance():
         flash('Please log in first', 'error')
         return redirect(url_for('login'))
 
-    balance = manager.view_balance()
-    return render_template('view_balance.html', balance=balance)
+    balance = manager.view_balance(session['username'])
+    return render_template('dashboard.html', balance=balance)
 
 
 @app.route('/view_transactions')
@@ -174,9 +171,8 @@ def view_transactions():
         flash('Please log in first', 'error')
         return redirect(url_for('login'))
 
-    transactions = manager.view_transactions()
+    transactions = manager.view_transactions(session['username'])
     return render_template('view_transactions.html', transactions=transactions)
-
 
 if __name__ == '__main__':
     app.run(debug=True)
