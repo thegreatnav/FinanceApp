@@ -6,7 +6,6 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from io import BytesIO
 import base64
 import matplotlib.pyplot as plt
-import time
 from itertools import groupby
 
 app = Flask(__name__)
@@ -66,13 +65,15 @@ class MoneyManager:
         self.save_transactions()
 
 
-    def view_balance(self,username):
+    def view_total_expenditure(self,username):
         total_amt_spent=0
         if username in self.transactions:
             for transaction in self.transactions[username]:
                 if 'type' in transaction and transaction['type']=='debit':
                     total_amt_spent=total_amt_spent+transaction['amount']
-        return total_amt_spent
+            return total_amt_spent
+        else:
+            return 0
 
     def view_transactions(self, username):
         if username in self.transactions:
@@ -88,11 +89,15 @@ class MoneyManager:
         return sum
 
     def view_totalamountgained(self,username):
-        sum = 0
-        for transaction in self.transactions[username]:
-            if transaction['type'] == 'credit':
-                sum = sum + transaction['amount']
-        return sum
+        total_amt_gained=0
+        if username in self.transactions:
+            for transaction in self.transactions[username]:
+                if 'type' in transaction and transaction['type']=='credit':
+                    total_amt_gained=total_amt_gained+transaction['amount']
+            return total_amt_gained
+        else:
+            return 0
+       
 
     def reset_database(self):
         with open(self.filename, 'w') as file:
@@ -173,10 +178,10 @@ def create_budget_chart(balance, budget, username):
             autopct='%1.1f%%', startangle=90, colors=colors, explode=explode,
             wedgeprops=dict(width=0.4, edgecolor='black'),textprops={'color': 'white','fontsize':14,'fontweight':'bold'})
     else:
-        ax.pie([sum(expenses), 0], labels=["Spent", "Remaining"],
+        ax.pie([10, 0], labels=["Spent", "Remaining"],
             autopct='%1.1f%%', startangle=90, colors=colors, explode=explode,
             wedgeprops=dict(width=0.4, edgecolor='black'),textprops={'color': 'white','fontsize':14,'fontweight':'bold'})
-        ax.text(0, 0, "Over Budget!", ha='center', va='center', fontsize=20, color='red')
+        ax.text(0, 0, "YOU'RE BROKE!", ha='center', va='center', fontsize=20, color='red')
     centre_circle = plt.Circle((0, 0), 0.50, fc='none')
     ax.add_patch(centre_circle)
     ax.axis('equal')
@@ -249,7 +254,6 @@ def register():
 
         if new_username and new_password:
             manager.register_user(new_username, new_password)
-            flash('Registration successful! You can now log in.', 'success')
             return redirect(url_for('login'))
         else:
             flash('Please enter both username and password.', 'error')
@@ -275,7 +279,7 @@ def visualization():
         flash('Please log in first', 'error')
         return redirect(url_for('login'))
 
-    balance = manager.view_balance(session['username'])
+    balance = manager.view_total_expenditure(session['username'])
     chart_image = create_overview_plots(balance, budget,session['username'])
     return render_template('visualization.html', chart_image=chart_image)
 
@@ -330,10 +334,11 @@ def dashboard():
             manager.update_budget(session['username'], new_budget)
             budget = manager.view_budget(session['username'])
 
-    balance = manager.view_balance(session['username'])
+    balance = manager.view_total_expenditure(session['username'])
+    bal=budget-balance
+    inc=manager.view_totalamountgained(session['username'])
     chart_image = create_budget_chart(balance, budget, session['username'])
-    return render_template('dashboard.html', balance=balance, chart_image=chart_image, budget=budget)
-
+    return render_template('dashboard.html', balance=balance, chart_image=chart_image, budget=budget,bal=bal,inc=inc)
 
 @app.route('/add_transaction', methods=['GET', 'POST'])
 def add_transaction():
@@ -358,13 +363,13 @@ def add_transaction():
     return render_template('add_transaction.html')
 
 
-@app.route('/view_balance')
-def view_balance():
+@app.route('/view_total_expenditure')
+def view_total_expenditure():
     if 'username' not in session:
         flash('Please log in first', 'error')
         return redirect(url_for('login'))
 
-    balance = manager.view_balance(session['username'])
+    balance = manager.view_total_expenditure(session['username'])
     return render_template('dashboard.html', balance=balance)
 
 
