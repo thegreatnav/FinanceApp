@@ -1,7 +1,12 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 import json
 import os
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from io import BytesIO
+import base64
 import matplotlib.pyplot as plt
+import time
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
@@ -22,10 +27,10 @@ class MoneyManager:
         with open(self.filename, 'w') as file:
             json.dump(self.transactions, file)
 
-    def add_transaction(self, username, description, amount, crdb):
+    def add_transaction(self, username, description, amount, crdb,category):
         if username not in self.transactions:
-            self.transactions[username] = []  # Keep it as an empty list
-        transaction = {'description': description, 'amount': amount, 'type': crdb}
+            self.transactions[username] = []
+        transaction = {'description': description, 'amount': amount, 'type': crdb, 'category':category}
         self.transactions[username].append(transaction)
         self.save_transactions()
 
@@ -64,17 +69,110 @@ class MoneyManager:
             json.dump({}, file)
 
     def register_user(self, username, password):
-        user_data = {'username': username, 'password': password}
+        # Load existing user data from the file
+        if os.path.exists("user_data.json"):
+            with open("user_data.json", "r") as file:
+                user_data = json.load(file)
+        else:
+            user_data = []
+
+        # Check if the username already exists
+        for user_entry in user_data:
+            if user_entry['username'] == username:
+                flash('Username already exists. Please choose a different one.', 'error')
+                return
+
+        # Add a new user entry to the user_data list
+        new_user_entry = {'username': username, 'password': password}
+        user_data.append(new_user_entry)
+
+        # Write the updated user_data back to the file
         with open("user_data.json", "w") as file:
             json.dump(user_data, file)
+
+        flash('Registration successful! You can now log in.', 'success')
+
 
     def validate_login(self, entered_username, entered_password):
         with open("user_data.json", "r") as file:
             user_data = json.load(file)
 
-        return entered_username == user_data.get("username") and entered_password == user_data.get("password")
+        for user_entry in user_data:
+            if user_entry.get("username") == entered_username and user_entry.get("password") == entered_password:
+                return True
 
+        return False
+
+    
 manager = MoneyManager()
+
+def create_expenses_chart(balance, budget,username):
+    fig, ax = Figure(), FigureCanvas(Figure())
+    ax = fig.add_subplot(111)
+    transactions = get_user_transactions(username)
+    descriptions = [transaction['description'] for transaction in transactions if transaction['type']=='debit']
+    amounts = [transaction['amount'] for transaction in transactions if transaction['type']=='debit']      
+    ax.pie(amounts, labels=descriptions, autopct='%1.1f%%', startangle=90)
+    ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+    ax.set_title('Expenses Overview')
+    image_stream = BytesIO()
+    fig.savefig(image_stream, format='png')
+    image_stream.seek(0)
+    encoded_image = base64.b64encode(image_stream.read()).decode('utf-8')       
+    return encoded_image
+
+def create_income_chart(balance, budget,username):
+    fig, ax = Figure(), FigureCanvas(Figure())
+    ax = fig.add_subplot(111)
+    transactions = get_user_transactions(username)
+    descriptions = [transaction['description'] for transaction in transactions if transaction['type']=='credit']
+    amounts = [transaction['amount'] for transaction in transactions if transaction['type']=='credit']      
+    ax.pie(amounts, labels=descriptions, autopct='%1.1f%%', startangle=90)
+    ax.axis('equal')
+    ax.set_title('Expenses Overview')
+    image_stream = BytesIO()
+    fig.savefig(image_stream, format='png')
+    image_stream.seek(0)
+    encoded_image = base64.b64encode(image_stream.read()).decode('utf-8')       
+    return encoded_image
+
+def get_user_transactions(username):
+    with open('transactions2.json', 'r') as file:
+        data = json.load(file)
+        return data.get(username,[])
+
+def create_overview_plots(balance,budget,username):
+    transactions = get_user_transactions(username)
+    # Extracting expense, budget, and income data
+    expenses = [transaction["amount"] for transaction in transactions if transaction.get("type") == "debit"]
+    budget = 200000  # Replace with your actual budget value
+    income = [transaction["amount"] for transaction in transactions if transaction.get("type") == "credit"]
+
+    # Create subplots
+    fig, axs = plt.subplots(1, 3, figsize=(15, 5))
+
+    # Plot Expense Overview
+    axs[0].pie([sum(expenses), budget - sum(expenses)], labels=["Spent", "Remaining"], autopct='%1.1f%%', startangle=90, colors=['red', 'green'])
+    axs[0].axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+    axs[0].set_title('Budget Overview')
+    
+    # Plot Expenses Overview
+    descriptions1 = [transaction['description'] for transaction in transactions if transaction['type']=='debit']
+    amounts1 = [transaction['amount'] for transaction in transactions if transaction['type']=='debit']
+    axs[1].bar(descriptions1, amounts1)
+    axs[1].set_title('Expenses Overview')
+
+    # Plot Income Overview
+    descriptions = [transaction['description'] for transaction in transactions if transaction['type']=='credit']
+    amounts = [transaction['amount'] for transaction in transactions if transaction['type']=='credit']
+    axs[2].bar(descriptions, amounts)
+    axs[2].set_title('Income Overview')
+
+    image_stream = BytesIO()
+    fig.savefig(image_stream, format='png')
+    image_stream.seek(0)
+    encoded_image = base64.b64encode(image_stream.read()).decode('utf-8')       
+    return encoded_image
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -91,7 +189,18 @@ def register():
 
     return render_template('register.html')
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/visualization')
+def visualization():
+    budget = 50000
+    if 'username' not in session:
+        flash('Please log in first', 'error')
+        return redirect(url_for('login'))
+
+    balance = manager.view_balance(session['username'])
+    chart_image = create_overview_plots(balance, budget,session['username'])
+    return render_template('visualization.html', chart_image=chart_image)
+
+@app.route('/login',methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         entered_username = request.form['username']
@@ -103,7 +212,6 @@ def login():
             # Login user
             if manager.validate_login(entered_username, entered_password):
                 session['username'] = entered_username
-                flash('Login successful!', 'success')
                 return redirect(url_for('index'))
             else:
                 flash('Invalid username or password', 'error')
@@ -115,24 +223,31 @@ def logout():
     session.pop('username', None)
     return redirect(url_for('login'))
 
+@app.route('/loading')
+def loading():
+    return render_template('loading.html')
+
+@app.route('/')
+def firstpage():
+    return render_template('firstpage.html', redirect_url=url_for('login'))
 
 @app.route('/index')
 def index():
     if 'username' in session:
-        return render_template('dashboard.html')
+        return render_template('loading.html')
     else:
         return redirect(url_for('login'))
 
-
 @app.route('/dashboard')
 def dashboard():
+    budget = 1000
     if 'username' not in session:
         flash('Please log in first', 'error')
         return redirect(url_for('login'))
     
-    balance=manager.view_balance(session['username'])
-    return render_template('dashboard.html',balance=balance)
-
+    balance = manager.view_balance(session['username'])
+    chart_image = create_overview_plots(balance, budget,session['username'])
+    return render_template('dashboard.html', balance=balance, chart_image=chart_image)
 
 @app.route('/add_transaction', methods=['GET', 'POST'])
 def add_transaction():
@@ -145,12 +260,14 @@ def add_transaction():
         description = request.form['description']
         amount = float(request.form['amount'])
         crdb = request.form['crdb']
+        category = request.form.get('category')
 
-        if description and amount:
-            manager.add_transaction(username,description, amount, crdb)
+        if category is not None and amount and crdb:
+            # Your code to handle the category
+            manager.add_transaction(username, description, amount, crdb, category)
             flash('Transaction added successfully!', 'success')
         else:
-            flash('Please enter both description and amount.', 'error')
+            flash('Category is missing in the form data.', 'error')
 
     return render_template('add_transaction.html')
 

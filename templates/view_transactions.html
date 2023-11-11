@@ -7,7 +7,7 @@
     <style>
         body {
             font-family: 'Arial', sans-serif;
-            background-color: #f0f0f0;
+            background-image: linear-gradient(to right top, #010408, #030d1a, #041327, #041835, #091b42);
             margin: 0;
             padding: 0;
         }
@@ -15,14 +15,14 @@
         .container {
             max-width: 600px;
             margin: 50px auto;
-            background-color: #fff;
+            background-image: linear-gradient(to right top, #010408, #030d1a, #041327, #041835, #091b42);
             padding: 20px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             border-radius: 8px;
         }
 
         h1 {
-            color: #333;
+            color: #fff;
             text-align: center;
         }
 
@@ -33,7 +33,7 @@
 
         li {
             margin-bottom: 15px;
-            color: #555;
+            color: #fff;
         }
 
         button {
@@ -58,11 +58,10 @@
         <h1>View Transactions</h1>
         <ul>
             {% for transaction in transactions %}
-                <li>{{ transaction['description'] }}: ({{ transaction['type'] }}) ₹{{ '{:.2f}'.format(transaction['amount']) }}</li>
+                <li>{{ transaction['description'] }}: ({{ transaction['type'] }}) ₹{{ '{:.2f}'.format(transaction['amount']) }} - Category: {{ transaction['category'] }}</li>
             {% endfor %}
         </ul>
-        <button onclick="goBack()">Go Back</button>
-
+        <a href="{{ url_for('dashboard') }}">Back to Dashboard</a>
         <script>
             function goBack() {
                 window.history.back();

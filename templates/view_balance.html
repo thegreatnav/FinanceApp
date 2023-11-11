@@ -7,7 +7,7 @@
     <style>
         body {
             font-family: 'Arial', sans-serif;
-            background-color: #f0f0f0;
+            background-image: linear-gradient(to right top, #010408, #030d1a, #041327, #041835, #091b42);
             margin: 0;
             padding: 0;
         }
@@ -52,8 +52,7 @@
     <div class="container">
         <h1>View Balance</h1>
         <p>Your current balance: ₹{{ '{:.2f}'.format(balance) }}</p>
-        <button onclick="goBack()">Go Back</button>
-
+        <a href="{{ url_for('dashboard') }}">Back to Dashboard</a>
         <script>
             function goBack() {
                 window.history.back();
