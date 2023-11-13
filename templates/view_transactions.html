@@ -84,18 +84,6 @@
     </form>    
     <div class="container">
         <h1>View Transactions</h1>
-        {%if sort_option=='month'%}
-            <ul>
-                {% for month, transactions in transactions_by_month.items() %}
-                    <li><strong>{{ month | string_to_datetime2 | strftime('%B %Y') }}</strong></li>
-                    <ul>
-                        {% for transaction in transactions %}
-                            <li>{{ transaction['description'] }}: ({{ transaction['type'] }}) ₹{{ '{:.2f}'.format(transaction['amount']) }} - {{ transaction['date'] | string_to_datetime | strftime('%B %Y') }}</li>
-                        {% endfor %}
-                    </ul>
-                {% endfor %}
-            </ul>
-        {%endif%}
         {%if sort_option=='date'%}
             <ul>
                 {% for category, transactions in transactions_by_category.items() %}
@@ -108,6 +96,42 @@
                 {% endfor %}
             </ul>
         {%endif%}
+        {%if sort_option=='month'%}
+            <ul>
+                {% for month, transactions in transactions_by_month.items() %}
+                    <li><strong>{{ month | string_to_datetime2 | strftime('%B %Y') }}</strong></li>
+                    <ul>
+                        {% for transaction in transactions %}
+                            <li>{{ transaction['description'] }}: ({{ transaction['type'] }}) ₹{{ '{:.2f}'.format(transaction['amount']) }} - {{ transaction['date'] | string_to_datetime | strftime('%B %Y') }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endfor %}
+            </ul>
+        {%endif%}
+        {% if sort_option == 'year' %}
+            <ul>
+                {% for year, transactions in transactions_by_year.items() %}
+                    <li><strong>{{ year }}</strong></li>
+                    <ul>
+                        {% for transaction in transactions %}
+                            <li>{{ transaction['description'] }}: ({{ transaction['type'] }}) ₹{{ '{:.2f}'.format(transaction['amount']) }} - {{ transaction['date'] | string_to_datetime | strftime('%B %Y') }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endfor %}
+            </ul>
+        {%endif%}
+        {% if sort_option == 'day' %}
+            <ul>
+                {% for day, transactions in transactions_by_day.items() %}
+                    <li><strong>{{ day | string_to_datetime3 | strftime('%B %d, %Y') }}</strong></li>
+                    <ul>
+                        {% for transaction in transactions %}
+                            <li>{{ transaction['description'] }}: ({{ transaction['type'] }}) ₹{{ '{:.2f}'.format(transaction['amount']) }} - {{ transaction['date'] | string_to_datetime | strftime('%B %Y') }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endfor %}
+            </ul>
+        {% endif %}
         <a href="{{ url_for('dashboard') }}" class="link-button">Back to Dashboard</a>
         <script>
             function goBack() {

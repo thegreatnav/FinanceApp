@@ -256,18 +256,21 @@ def create_overview_plots(balance,username):
     encoded_image = base64.b64encode(image_stream.read()).decode('utf-8')
     return encoded_image
 
+def string_to_datetime3(value):
+    return datetime.strptime(value, '%Y-%m-%d')
+
 def string_to_datetime2(value):
     return datetime.strptime(value,'%Y-%m')
 
 def string_to_datetime(value):
     return datetime.strptime(value, '%Y-%m-%d %H:%M:%S')
-    pass
 
 def format_datetime(value, format='%B %Y'):
     return value.strftime(format)
 
 app.jinja_env.filters['string_to_datetime'] = string_to_datetime
 app.jinja_env.filters['string_to_datetime2'] = string_to_datetime2
+app.jinja_env.filters['string_to_datetime3'] = string_to_datetime3
 app.jinja_env.filters['strftime'] = format_datetime
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -410,6 +413,8 @@ def view_transactions():
     transactions = manager.view_transactions(session['username'])
     transactions_by_category = {}
     transactions_by_month={}
+    transactions_by_year = {}
+    transactions_by_day = {}
     transactions.sort(key=lambda x: x['category'])
 
     sort_option = request.args.get('sort_option', 'date')  # Default to sorting by date
@@ -424,7 +429,12 @@ def view_transactions():
         transactions_by_category[category] = list(group)
     for month,group in groupby(transactions,key=lambda x: x['date'][:7]):
             transactions_by_month[month] = list(group)
-    return render_template('view_transactions.html', transactions_by_category=transactions_by_category,transactions_by_month=transactions_by_month,sort_option=sort_option)
+    for year, group in groupby(transactions, key=lambda x: x['date'][:4]):
+        transactions_by_year[year] = list(group)
+    for day, group in groupby(transactions, key=lambda x: x['date'][:10]):
+        transactions_by_day[day] = list(group)
+    print(transactions_by_day)
+    return render_template('view_transactions.html', transactions_by_category=transactions_by_category,transactions_by_month=transactions_by_month,sort_option=sort_option,transactions_by_year=transactions_by_year,transactions_by_day=transactions_by_day)
 
 if __name__ == '__main__':
     app.run(debug=True)
