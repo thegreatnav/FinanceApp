@@ -72,18 +72,42 @@
     </style>
 </head>
 <body>
+    <form action="{{ url_for('view_transactions') }}" method="get">
+        <label for="sort_option">Sort by:</label>
+        <select name="sort_option" id="sort_option">
+            <option value="date">Category</option>
+            <option value="month">Month</option>
+            <option value="year">Year</option>
+            <option value="day">Day</option>
+        </select>
+        <button type="submit">Sort</button>
+    </form>    
     <div class="container">
         <h1>View Transactions</h1>
-        <ul>
-            {% for category, transactions in transactions_by_category.items() %}
-                <li><strong>{{ category }}</strong></li>
-                <ul>
-                    {% for transaction in transactions %}
-                        <li>{{ transaction['description'] }}: ({{ transaction['type'] }}) ₹{{ '{:.2f}'.format(transaction['amount']) }}</li>
-                    {% endfor %}
-                </ul>
-            {% endfor %}
-        </ul>
+        {%if sort_option=='month'%}
+            <ul>
+                {% for month, transactions in transactions_by_month.items() %}
+                    <li><strong>{{ month | string_to_datetime2 | strftime('%B %Y') }}</strong></li>
+                    <ul>
+                        {% for transaction in transactions %}
+                            <li>{{ transaction['description'] }}: ({{ transaction['type'] }}) ₹{{ '{:.2f}'.format(transaction['amount']) }} - {{ transaction['date'] | string_to_datetime | strftime('%B %Y') }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endfor %}
+            </ul>
+        {%endif%}
+        {%if sort_option=='date'%}
+            <ul>
+                {% for category, transactions in transactions_by_category.items() %}
+                    <li><strong>{{ category }}</strong></li>
+                    <ul>
+                        {% for transaction in transactions %}
+                            <li>{{ transaction['description'] }}: ({{ transaction['type'] }}) ₹{{ '{:.2f}'.format(transaction['amount']) }} - {{ transaction['date'] | string_to_datetime | strftime('%B %Y') }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endfor %}
+            </ul>
+        {%endif%}
         <a href="{{ url_for('dashboard') }}" class="link-button">Back to Dashboard</a>
         <script>
             function goBack() {

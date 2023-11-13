@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 from itertools import groupby
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
+from datetime import datetime
+from jinja2 import Environment
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
@@ -60,10 +62,11 @@ class MoneyManager:
         with open(self.filename, 'w') as file:
             json.dump(self.transactions, file)
 
-    def add_transaction(self, username, description, amount, crdb,category):
+    def add_transaction(self, username, description, amount, crdb,category,date):
         if username not in self.transactions:
             self.transactions[username] = []
-        transaction = {'description': description, 'amount': amount, 'type': crdb, 'category':category}
+        date_string = date.strftime('%Y-%m-%d %H:%M:%S')
+        transaction = {'description': description, 'amount': amount, 'type': crdb, 'category':category,'date':date_string}
         self.transactions[username].append(transaction)
         self.save_transactions()
 
@@ -134,8 +137,7 @@ class MoneyManager:
             if user_entry.get("username") == entered_username and user_entry.get("password")==entered_password:
                 return True
         return False
-
-    
+        
 manager = MoneyManager()
 
 def create_expenses_chart(balance, budget, username):
@@ -254,6 +256,19 @@ def create_overview_plots(balance,username):
     encoded_image = base64.b64encode(image_stream.read()).decode('utf-8')
     return encoded_image
 
+def string_to_datetime2(value):
+    return datetime.strptime(value,'%Y-%m')
+
+def string_to_datetime(value):
+    return datetime.strptime(value, '%Y-%m-%d %H:%M:%S')
+    pass
+
+def format_datetime(value, format='%B %Y'):
+    return value.strftime(format)
+
+app.jinja_env.filters['string_to_datetime'] = string_to_datetime
+app.jinja_env.filters['string_to_datetime2'] = string_to_datetime2
+app.jinja_env.filters['strftime'] = format_datetime
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -359,9 +374,16 @@ def add_transaction():
         amount = float(request.form['amount'])
         crdb = request.form['crdb']
         category = request.form.get('category')
+        date_str=request.form.get('date')
 
-        if category is not None and amount and crdb:
-            manager.add_transaction(username, description, amount, crdb, category)
+        try:
+            date = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
+        except ValueError:
+            flash('Invalid date format. Please use YYYY-MM-DD HH:MM:SS.', 'error')
+            return redirect(url_for('add_transaction'))
+
+        if category is not None and amount and crdb and date:
+            manager.add_transaction(username, description, amount, crdb, category,date)
             flash('Transaction added successfully!', 'success')
         else:
             flash('Category is missing in the form data.', 'error')
@@ -387,10 +409,22 @@ def view_transactions():
 
     transactions = manager.view_transactions(session['username'])
     transactions_by_category = {}
+    transactions_by_month={}
     transactions.sort(key=lambda x: x['category'])
+
+    sort_option = request.args.get('sort_option', 'date')  # Default to sorting by date
+    if sort_option == 'month':
+        transactions.sort(key=lambda x: (int(x['date'].split('-')[0]), int(x['date'].split('-')[1])))
+    elif sort_option == 'year':
+        transactions.sort(key=lambda x: int(x['date'].split('-')[0]))
+    elif sort_option == 'day':
+        transactions.sort(key=lambda x: datetime.strptime(x['date'], '%Y-%m-%d %H:%M:%S'))
+
     for category, group in groupby(transactions, key=lambda x: x['category']):
         transactions_by_category[category] = list(group)
-    return render_template('view_transactions.html', transactions_by_category=transactions_by_category)
+    for month,group in groupby(transactions,key=lambda x: x['date'][:7]):
+            transactions_by_month[month] = list(group)
+    return render_template('view_transactions.html', transactions_by_category=transactions_by_category,transactions_by_month=transactions_by_month,sort_option=sort_option)
 
 if __name__ == '__main__':
     app.run(debug=True)
