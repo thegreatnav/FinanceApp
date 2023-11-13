@@ -433,7 +433,6 @@ def view_transactions():
         transactions_by_year[year] = list(group)
     for day, group in groupby(transactions, key=lambda x: x['date'][:10]):
         transactions_by_day[day] = list(group)
-    print(transactions_by_day)
     return render_template('view_transactions.html', transactions_by_category=transactions_by_category,transactions_by_month=transactions_by_month,sort_option=sort_option,transactions_by_year=transactions_by_year,transactions_by_day=transactions_by_day)
 
 if __name__ == '__main__':
