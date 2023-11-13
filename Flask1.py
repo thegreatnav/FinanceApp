@@ -7,9 +7,12 @@ from io import BytesIO
 import base64
 import matplotlib.pyplot as plt
 from itertools import groupby
+from flask_sqlalchemy import SQLAlchemy
+from flask_bcrypt import Bcrypt
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
+bcrypt = Bcrypt(app)
 
 class MoneyManager:
 
@@ -114,6 +117,8 @@ class MoneyManager:
             if user_entry['username'] == username:
                 flash('Username already exists. Please choose a different one.', 'error')
                 return
+        
+        #hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
         new_user_entry = {'username': username, 'password': password}
         user_data.append(new_user_entry)
         with open("user_data.json", "w") as file:
@@ -125,9 +130,9 @@ class MoneyManager:
             user_data = json.load(file)
 
         for user_entry in user_data:
-            if user_entry.get("username") == entered_username and user_entry.get("password") == entered_password:
+            #if user_entry.get("username") == entered_username and bcrypt.check_password_hash(user_entry.get("password"), entered_password):
+            if user_entry.get("username") == entered_username and user_entry.get("password")==entered_password:
                 return True
-
         return False
 
     
@@ -168,7 +173,7 @@ def create_income_chart(balance, budget,username):
 
 def create_budget_chart(balance, budget, username):
 
-    fig, ax = plt.subplots(figsize=(6, 6), facecolor='#010408')  # Set the size and background color
+    fig, ax = plt.subplots(figsize=(6, 6), facecolor='#010408')
     transactions = get_user_transactions(username)
     expenses = [transaction["amount"] for transaction in transactions if transaction.get("type") == "debit"]
     colors = ['#ff9999', '#66b3ff']
@@ -181,7 +186,10 @@ def create_budget_chart(balance, budget, username):
         ax.pie([10, 0], labels=["Spent", "Remaining"],
             autopct='%1.1f%%', startangle=90, colors=colors, explode=explode,
             wedgeprops=dict(width=0.4, edgecolor='black'),textprops={'color': 'white','fontsize':14,'fontweight':'bold'})
-        ax.text(0, 0, "YOU'RE BROKE!", ha='center', va='center', fontsize=20, color='red')
+        if budget>0:
+            ax.text(0, 0, "YOU'RE BROKE!", ha='center', va='center', fontsize=20, color='red')
+        else:
+            ax.text(0, 0, "Please set your expenditure!", ha='center', va='center', fontsize=16, color='white')
     centre_circle = plt.Circle((0, 0), 0.50, fc='none')
     ax.add_patch(centre_circle)
     ax.axis('equal')
@@ -199,9 +207,10 @@ def get_user_transactions(username):
         data = json.load(file)
         return data.get(username,[])
 
-def create_overview_plots(balance, budget, username):
+def create_overview_plots(balance,username):
     transactions = get_user_transactions(username)
     # Extracting expense, budget, and income data
+    budget = manager.view_budget(session['username'])
     expenses = [transaction["amount"] for transaction in transactions if transaction.get("type") == "debit"]  # Replace with your actual budget value
     income = [transaction["amount"] for transaction in transactions if transaction.get("type") == "credit"]
 
@@ -274,13 +283,12 @@ def update_budget():
 
 @app.route('/visualization')
 def visualization():
-    budget = 50000
     if 'username' not in session:
         flash('Please log in first', 'error')
         return redirect(url_for('login'))
 
     balance = manager.view_total_expenditure(session['username'])
-    chart_image = create_overview_plots(balance, budget,session['username'])
+    chart_image = create_overview_plots(balance, session['username'])
     return render_template('visualization.html', chart_image=chart_image)
 
 @app.route('/login',methods=['GET', 'POST'])
@@ -292,7 +300,6 @@ def login():
         if 'register' in request.form:
             return render_template('register.html')
         else:
-            # Login user
             if manager.validate_login(entered_username, entered_password):
                 session['username'] = entered_username
                 return redirect(url_for('index'))
@@ -354,7 +361,6 @@ def add_transaction():
         category = request.form.get('category')
 
         if category is not None and amount and crdb:
-            # Your code to handle the category
             manager.add_transaction(username, description, amount, crdb, category)
             flash('Transaction added successfully!', 'success')
         else:

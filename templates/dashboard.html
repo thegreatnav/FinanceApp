@@ -109,7 +109,7 @@
 
 <body>
     <div class="container">
-        <h2>Welcome, {{ session['username'] }}!</h2>
+        <h2>Welcome, {{session['username'] }}!</h2>
         <form action="{{ url_for('update_budget') }}" method="post">
             <label for="monthly-budget">Monthly Budget:</label>
             <input type="number" name="monthly-budget" id="monthly-budget" required value="{{ '{:.2f}'.format(budget) }}">
