@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Transactions</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-image: linear-gradient(to right top, #010408, #030d1a, #041327, #041835, #091b42);
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            background-image: linear-gradient(to right top, #010408, #030d1a, #041327, #041835, #091b42);
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        h1 {
+            color: #fff;
+            text-align: center;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            margin-bottom: 15px;
+            color: #fff;
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #4caf50;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+        .link-button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #4caf50;
+            color: #fff;
+            text-align: center;
+            text-decoration: none;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 10px; /* Adjust margin as needed */
+        }
+
+        .link-button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <form action="{{ url_for('view_transactions') }}" method="get">
+        <label for="sort_option">Sort by:</label>
+        <select name="sort_option" id="sort_option">
+            <option value="date">Category</option>
+            <option value="month">Month</option>
+            <option value="year">Year</option>
+            <option value="day">Day</option>
+        </select>
+        <button type="submit">Sort</button>
+    </form>    
+    <div class="container">
+        <h1>View Transactions</h1>
+        {%if sort_option=='date'%}
+            <ul>
+                {% for category, transactions in transactions_by_category.items() %}
+                    <li><strong>{{ category }}</strong></li>
+                    <ul>
+                        {% for transaction in transactions %}
+                            <li>{{ transaction['description'] }}: ({{ transaction['type'] }}) ₹{{ '{:.2f}'.format(transaction['amount']) }} - {{ transaction['date'] | string_to_datetime | strftime('%B %Y') }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endfor %}
+            </ul>
+        {%endif%}
+        {%if sort_option=='month'%}
+            <ul>
+                {% for month, transactions in transactions_by_month.items() %}
+                    <li><strong>{{ month | string_to_datetime2 | strftime('%B %Y') }}</strong></li>
+                    <ul>
+                        {% for transaction in transactions %}
+                            <li>{{ transaction['description'] }}: ({{ transaction['type'] }}) ₹{{ '{:.2f}'.format(transaction['amount']) }} - {{ transaction['date'] | string_to_datetime | strftime('%B %Y') }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endfor %}
+            </ul>
+        {%endif%}
+        {% if sort_option == 'year' %}
+            <ul>
+                {% for year, transactions in transactions_by_year.items() %}
+                    <li><strong>{{ year }}</strong></li>
+                    <ul>
+                        {% for transaction in transactions %}
+                            <li>{{ transaction['description'] }}: ({{ transaction['type'] }}) ₹{{ '{:.2f}'.format(transaction['amount']) }} - {{ transaction['date'] | string_to_datetime | strftime('%B %Y') }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endfor %}
+            </ul>
+        {%endif%}
+        {% if sort_option == 'day' %}
+            <ul>
+                {% for day, transactions in transactions_by_day.items() %}
+                    <li><strong>{{ day | string_to_datetime3 | strftime('%B %d, %Y') }}</strong></li>
+                    <ul>
+                        {% for transaction in transactions %}
+                            <li>{{ transaction['description'] }}: ({{ transaction['type'] }}) ₹{{ '{:.2f}'.format(transaction['amount']) }} - {{ transaction['date'] | string_to_datetime | strftime('%B %Y') }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        <a href="{{ url_for('dashboard') }}" class="link-button">Back to Dashboard</a>
+        <script>
+            function goBack() {
+                window.history.back();
+            }
+        </script>
+    </div>
+</body>
+</html>

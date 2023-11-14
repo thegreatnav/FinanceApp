@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-image: linear-gradient(to right top, #010408, #030d1a, #041327, #041835, #091b42);
+            margin: 0;
+            padding: 0;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            background-image: linear-gradient(to right top, #010408, #030d1a, #041327, #041835, #091b42);
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        img {
+            display: block;
+            margin: 0 auto;
+            max-width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        form {
+            margin: 10px;
+            text-align: center;
+            display: flex;
+        }
+
+        label {
+            font-size: 16px;
+        }
+
+        input {
+            margin-left: 20px;
+            margin-right:10px;
+            width: 100px;
+            height: fit-content;
+            background-color: transparent;
+            border: none;
+            color: #fff;
+            font-size: 16px;
+        }
+
+        button {
+            width: fit-content;
+            height: 30px;
+            background-color: #45a049;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #4caf50;
+        }
+
+        p {
+            text-align: center;
+            font-size: 18px;
+            color: #fff;
+        }
+
+        a.button {
+            display: block;
+            width: fit-content;
+            padding: 10px;
+            background-color: #4caf50;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-bottom: 15px;
+            text-align: center;
+            text-decoration: none;
+            font-size: 16px;
+            margin:15px auto;
+        }
+
+        a.button:hover {
+            background-color: #45a049;
+        }
+
+        script {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2>Welcome, {{session['username'] }}!</h2>
+        <form action="{{ url_for('update_budget') }}" method="post">
+            <label for="monthly-budget">Monthly Budget:</label>
+            <input type="number" name="monthly-budget" id="monthly-budget" required value="{{ '{:.2f}'.format(budget) }}">
+            <button class="updatebudgetbutton" type="submit" name="update-budget">Update Budget</button>
+        </form>
+        {% block content %}
+            <img src="data:image/png;base64,{{ chart_image }}" alt="Finances Overview">
+            {% if balance is defined %}
+            <p>Your current expenditure is: ₹{{ '{:.2f}'.format(balance) }}</p>
+            {% else %}
+            <p>No balance available.</p>
+            {% endif %}
+            {% if bal is defined %}
+            <p>Your current balance is: ₹{{ '{:.2f}'.format(bal) }}</p>
+            {% else %}
+            <p>No balance available.</p>
+            {% endif %}
+            {% if inc is defined %}
+            <p>Your current total income is: ₹{{ '{:.2f}'.format(inc) }}</p>
+            {% else %}
+            <p>No income available.</p>
+            {% endif %}
+        {% endblock %}
+
+        <a href="{{ url_for('add_transaction') }}" class="button">Add Transaction</a>
+        <a href="{{ url_for('view_transactions') }}" class="button">View Transactions</a>
+        <a href="{{ url_for('visualization') }}" class="button">View Visualization</a>
+
+        <a href="{{ url_for('login') }}" class="button">Exit</a>
+        <script>
+            function add_transaction_category(cat) {}
+            function goBack() {
+                window.history.back();
+            }
+        </script>
+        <script src="https://cdn.bokeh.org/bokeh/release/bokeh-3.0.1.min.js"></script>
+        <script src="https://cdn.bokeh.org/bokeh/release/bokeh-widgets-3.0.1.min.js"></script>
+        <script src="https://cdn.bokeh.org/bokeh/release/bokeh-tables-3.0.1.min.js"></script>
+    </div>
+</body>
+
+</html>

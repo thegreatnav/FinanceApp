@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Transaction</title>
+    <script>
+        function goBack(){
+            window.history.back();
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-image: linear-gradient(to right top, #010408, #030d1a, #041327, #041835, #091b42);
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            background-image: linear-gradient(to right top, #010408, #030d1a, #041327, #041835, #091b42);
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        h1 {
+            color: #fff;
+            text-align: center;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #fff;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+        }
+        .category-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+        .category-button {
+            flex-basis: calc(33.33% - 10px);
+            margin-bottom: 10px;
+            width: 20px; /* Set the desired width for the button */
+            height: 100px; /* Set the desired height for the button */
+        }
+        .category-button img {
+            width: 50%; /* Set the width to 100% of the container */
+            height: 100%; /* Set the height to 100% of the container */
+            border-radius: 4px;
+            transition: opacity 0.3s;
+        }
+        .category-button:hover img {
+            opacity: 0.8;
+        }
+        button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-image: linear-gradient(to right top, #010408, #030d1a, #041327, #041835, #091b42);
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .error-message {
+            color: #ff0000;
+            margin-top: 10px;
+        }
+
+        .success-message {
+            color: #008000;
+            margin-top: 10px;
+        }
+        a.button1 {
+            display: block;
+            width: fit-content;
+            padding: 10px;
+            background-color: #4caf50;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-bottom: 15px;
+            text-align: center;
+            text-decoration: none;
+            font-size: 16px;
+            margin:15px auto;
+        }
+
+        a.button1:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Add a Transaction</h1>
+        <form method="post" action="{{ url_for('add_transaction') }}">
+            <label for="description">Description:</label>
+            <input type="text" name="description" required>
+
+            <label for="amount">Amount:</label>
+            <input type="number" name="amount" required>
+
+            <label for="date">Date and Time (YYYY-MM-DD HH:MM:SS): </label>
+            <input type="text" id="date" name="date" required>
+
+            <label for="crdb">Transaction Type:</label>
+            <select name="crdb">
+                <option value="credit">Income</option>
+                <option value="debit">Expenditure</option>
+            </select>
+
+            <button type="submit">Add Transaction</button>
+            <label for="category">Category:</label>
+            <div class="category-buttons">
+                <button type="submit" class="category-button" name="category" value="Travel"><img src="https://cdn-icons-png.flaticon.com/256/3762/3762131.png" alt="Travel"></button>
+                <button type="submit" class="category-button" name="category" value="Health"><img src="https://cdn-icons-png.flaticon.com/256/2382/2382461.png" alt="Health"></button>
+                <button type="submit" class="category-button" name="category" value="Fitness"><img src="https://cdn-icons-png.flaticon.com/256/502/502128.png" alt="Gym"></button>
+                <button type="submit" class="category-button" name="category" value="Shopping"><img src="https://cdn-icons-png.flaticon.com/256/3081/3081559.png" alt="Shopping"></button>
+                <button type="submit" class="category-button" name="category" value="Food"><img src="https://cdn-icons-png.flaticon.com/256/9718/9718703.png" alt="Food"></button>
+                <button type="submit" class="category-button" name="category" value="Salary"><img src="https://cdn-icons-png.flaticon.com/256/855/855279.png" alt="Income"></button>
+            </div>
+        </form>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="success-message">
+                    {{ messages[0] }}
+                </div>
+            {% endif %}
+        {% endwith %}
+        <a href="{{ url_for('dashboard') }}" class="button1">Back to Dashboard</a>
+    </div>
+</body>
+</html>
