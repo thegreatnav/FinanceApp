@@ -7,14 +7,11 @@ from io import BytesIO
 import base64
 import matplotlib.pyplot as plt
 from itertools import groupby
-from flask_sqlalchemy import SQLAlchemy
-from flask_bcrypt import Bcrypt
 from datetime import datetime
 from jinja2 import Environment
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
-bcrypt = Bcrypt(app)
 
 class MoneyManager:
 
@@ -47,7 +44,7 @@ class MoneyManager:
         with open(budget_file, 'w') as file:
             json.dump(budget_data, file)
         
-    def __init__(self, filename='transactions2.json'):
+    def __init__(self, filename='C:/Users/ASUS/Desktop/App1/FinanceApp/transactions2.json'):
         self.filename = filename
         self.transactions = self.load_transactions()
 
@@ -111,8 +108,8 @@ class MoneyManager:
             json.dump({}, file)
 
     def register_user(self, username, password):
-        if os.path.exists("user_data.json"):
-            with open("user_data.json", "r") as file:
+        if os.path.exists('C:/Users/ASUS/Desktop/App1/FinanceApp/user_data.json'):
+            with open('C:/Users/ASUS/Desktop/App1/FinanceApp/user_data.json', 'r') as file:
                 user_data = json.load(file)
         else:
             user_data = []
@@ -124,12 +121,12 @@ class MoneyManager:
         #hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
         new_user_entry = {'username': username, 'password': password}
         user_data.append(new_user_entry)
-        with open("user_data.json", "w") as file:
+        with open('C:/Users/ASUS/Desktop/App1/FinanceApp/user_data.json', 'w') as file:
             json.dump(user_data, file)
         flash('Registration successful! You can now log in.', 'success')
 
     def validate_login(self, entered_username, entered_password):
-        with open("user_data.json", "r") as file:
+        with open('C:/Users/ASUS/Desktop/App1/FinanceApp/user_data.json', 'r') as file:
             user_data = json.load(file)
 
         for user_entry in user_data:
@@ -205,7 +202,7 @@ def create_budget_chart(balance, budget, username):
 
 
 def get_user_transactions(username):
-    with open('transactions2.json', 'r') as file:
+    with open('C:/Users/ASUS/Desktop/App1/FinanceApp/transactions2.json', 'r') as file:
         data = json.load(file)
         return data.get(username,[])
 
